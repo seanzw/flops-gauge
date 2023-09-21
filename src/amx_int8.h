@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <sys/syscall.h>
 #include <unistd.h>
+#include <stdbool.h>
 
 // Each amx int8 is 16*16*64*2=32k flop.
 const uint64_t flop_per_iter = 6 * 16 * 16 * 64 * 2;
@@ -34,12 +35,7 @@ static void init_tile_config(__tilecfg *tileinfo) {
   tileinfo->palette_id = 1;
   tileinfo->start_row = 0;
 
-  for (i = 0; i < 1; ++i) {
-    tileinfo->colsb[i] = MAX_ROWS;
-    tileinfo->rows[i] = MAX_ROWS;
-  }
-
-  for (i = 1; i < 4; ++i) {
+  for (i = 0; i < 8; ++i) {
     tileinfo->colsb[i] = MAX_COLS;
     tileinfo->rows[i] = MAX_ROWS;
   }
@@ -141,19 +137,9 @@ void setup_tile() {
   _tile_loadd(3, res, STRIDE);
   _tile_loadd(4, res, STRIDE);
   _tile_loadd(5, res, STRIDE);
-
-  // Release the tile configuration to return to the init state,
-  // which releases all storage it currently holds
-  _tile_release();
 }
 
-__attribute__((noinline)) __m512 impl(int N, float a, float b, float c) {
-
-  __m512 A = _mm512_set1_ps(a);
-  __m512 B = _mm512_set1_ps(b);
-  __m512 C = _mm512_set1_ps(c);
-
-  __m512 s;
+__attribute__((noinline)) void impl(int N, float a, float b, float c) {
 
 #pragma clang loop unroll(disable)
   for (int i = 0; i < N; ++i) {
@@ -165,7 +151,7 @@ __attribute__((noinline)) __m512 impl(int N, float a, float b, float c) {
     _tile_dpbssd(5, 6, 7);
   }
 
-  return s;
+  return;
 }
 
 #define kernel_init setup_tile
