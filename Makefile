@@ -3,7 +3,7 @@
 #######################################################################
 
 peak_flops_%.exe: src/peak_flops.c src/%.h
-	gcc $^ -D$* -O3 -std=c99 -march=native -o $@
+	gcc $^ -Dkernel_config=$* -O3 -std=gnu99 -march=native -o $@
 	./$@
 
 

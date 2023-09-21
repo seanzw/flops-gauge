@@ -3,10 +3,16 @@
 #include <stdio.h>
 #include <time.h>
 
-#ifdef avx2_float
-#define kernel_str "avx2_float"
-#include "avx2_float.h"
-#else
+#define INCF(F) INCF_(F)
+#define INCF_(F) #F
+
+#ifdef kernel_config
+#define kernel_str INCF_(kernel_config)
+#define kernel_header kernel_config.h
+#include INCF(kernel_header)
+#endif
+
+#ifndef kernel_str
 #error "Please select kernel"
 #endif
 
