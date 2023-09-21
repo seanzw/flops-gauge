@@ -16,12 +16,19 @@
 #error "Please select kernel"
 #endif
 
+void nop_kernel_init() {}
+
+#ifndef kernel_init
+#define kernel_init nop_kernel_init
+#endif
+
 #define BILLION 1000000000L
 
 int main(int argc, char **argv) {
   uint64_t diff;
   struct timespec start, end;
-  int i;
+
+  kernel_init();
 
   clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start);
 
