@@ -39,6 +39,10 @@ gemm_cblas_aocl_prof.exe: gemm_cblas_prof.c *.h
 gemm_cblas_aocl_single_prof.exe: gemm_cblas_prof.c *.h
 	gcc $^ -O3 -I$(AOCL_INC_PATH) -L$(AOCL_LIB_PATH) -lblis -lm -o $@
 
+#######################################################################
+#                 GEMM MKL Gauge
+#######################################################################
+
 ifndef MKL_INSTALL_PATH
 $(warning Using default MKL_INSTALL_PATH)
 MKL_INSTALL_PATH=/usr/local/lib
@@ -48,8 +52,8 @@ MKL_LIB_PATH   := $(MKL_INSTALL_PATH)/lib
 MKL_INC_PATH   := $(MKL_INSTALL_PATH)/include
 MKL_SHARE_PATH := $(MKL_INSTALL_PATH)/lib
 
-gemm_cblas_mkl.exe: gemm_cblas.c *.h
-	gcc $^ -O3 -DUSE_MKL -I$(MKL_INC_PATH) -L$(MKL_LIB_PATH) -lmkl_rt -lpthread -lm -ldl -o $@
+gemm_cblas_mkl.exe: src/gemm_cblas.c src/*.h
+	gcc $< -O3 -DUSE_MKL -I$(MKL_INC_PATH) -L$(MKL_LIB_PATH) -lmkl_rt -lpthread -lm -ldl -o $@
 
 gemm_cblas_mkl_single.exe: gemm_cblas.c *.h
 	gcc $^ -O3 -DSINGLE_THREAD -DUSE_MKL -I$(MKL_INC_PATH) -L$(MKL_LIB_PATH) -lmkl_rt -lpthread -lm -ldl -o $@

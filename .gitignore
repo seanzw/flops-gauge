@@ -1,3 +1,4 @@
 private-env.sh
 *.exe
 *.asm
+*.csv
