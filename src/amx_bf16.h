@@ -1,10 +1,10 @@
-#ifndef PEAK_FLOPS_KERNEL_AMX_INT8_H
-#define PEAK_FLOPS_KERNEL_AMX_INT8_H
+#ifndef PEAK_FLOPS_KERNEL_AMX_BF16_H
+#define PEAK_FLOPS_KERNEL_AMX_BF16_H
 
 #include "amx_common.h"
 
-// Each amx int8 is 16*16*64*2=32k flop.
-const uint64_t flop_per_iter = 6 * 16 * 16 * 64 * 2;
+// Each amx int8 is 16*16*32*2=16k flop.
+const uint64_t flop_per_iter = 6 * 16 * 16 * 32 * 2;
 
 #define MAX 1024
 #define MAX_ROWS 16
@@ -53,12 +53,12 @@ __attribute__((noinline)) void impl(int N, float a, float b, float c) {
 
 #pragma clang loop unroll(disable)
   for (int i = 0; i < N; ++i) {
-    _tile_dpbssd(0, 6, 7);
-    _tile_dpbssd(1, 6, 7);
-    _tile_dpbssd(2, 6, 7);
-    _tile_dpbssd(3, 6, 7);
-    _tile_dpbssd(4, 6, 7);
-    _tile_dpbssd(5, 6, 7);
+    _tile_dpbf16ps(0, 6, 7);
+    _tile_dpbf16ps(1, 6, 7);
+    _tile_dpbf16ps(2, 6, 7);
+    _tile_dpbf16ps(3, 6, 7);
+    _tile_dpbf16ps(4, 6, 7);
+    _tile_dpbf16ps(5, 6, 7);
   }
 
   return;
