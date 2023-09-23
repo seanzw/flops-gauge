@@ -49,10 +49,10 @@ void setup_tile() {
   _tile_loadd(5, res, STRIDE);
 }
 
-__attribute__((noinline)) void impl(int N, float a, float b, float c) {
+__attribute__((noinline)) void impl(int64_t N, float a, float b, float c) {
 
 #pragma clang loop unroll(disable)
-  for (int i = 0; i < N; ++i) {
+  for (int64_t i = 0; i < N; ++i) {
     _tile_dpbf16ps(0, 6, 7);
     _tile_dpbf16ps(1, 6, 7);
     _tile_dpbf16ps(2, 6, 7);
@@ -66,6 +66,6 @@ __attribute__((noinline)) void impl(int N, float a, float b, float c) {
 
 #define kernel_init setup_tile
 
-void kernel(int N) { impl(N, 0.4f, 1.5f, 1.0f); }
+void kernel(int64_t N) { impl(N, 0.4f, 1.5f, 1.0f); }
 
 #endif

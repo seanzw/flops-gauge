@@ -6,6 +6,10 @@ peak_flops_%.exe: src/peak_flops.c src/%.h
 	gcc $^ -Dkernel_config=$* -O3 -std=gnu99 -march=native -o $@
 	# ./$@
 
+omp_peak_flops_%.exe: src/peak_flops.c src/%.h
+	gcc $^ -Dkernel_config=$* -DUSE_OPENMP -fopenmp -O3 -std=gnu99 -march=native -o $@
+	# ./$@
+
 
 # AOCL_BLIS_INSTALL_PATH=/data/zhengrong/aocl/blis-install
 # AOCL_LIB_PATH   := $(AOCL_BLIS_INSTALL_PATH)/lib

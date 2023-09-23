@@ -7,7 +7,7 @@
 // Each fmadd is 32 flop.
 const uint64_t flop_per_iter = 30 * 16 * 2;
 
-__attribute__((noinline)) __m512 impl(int N, float a, float b, float c) {
+__attribute__((noinline)) __m512 impl(int64_t N, float a, float b, float c) {
 
   __m512 A = _mm512_set1_ps(a);
   __m512 B = _mm512_set1_ps(b);
@@ -16,7 +16,7 @@ __attribute__((noinline)) __m512 impl(int N, float a, float b, float c) {
   __m512 s;
 
 #pragma clang loop unroll(disable)
-  for (int i = 0; i < N; ++i) {
+  for (int64_t i = 0; i < N; ++i) {
     __asm__("vfmadd231ps     %zmm31, %zmm30, %zmm0\n\t"
             "vfmadd231ps     %zmm31, %zmm30, %zmm1\n\t"
             "vfmadd231ps     %zmm31, %zmm30, %zmm2\n\t"
@@ -52,6 +52,6 @@ __attribute__((noinline)) __m512 impl(int N, float a, float b, float c) {
   return s;
 }
 
-void kernel(int N) { impl(N, 0.4f, 1.5f, 1.0f); }
+void kernel(int64_t N) { impl(N, 0.4f, 1.5f, 1.0f); }
 
 #endif

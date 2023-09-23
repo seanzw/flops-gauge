@@ -18,6 +18,18 @@ Which will build the binary and run it. Check the `src` folder
 for available configuration. Notice that if your CPU does not
 support the ISA feature, the compilation will fail.
 
+### Multiple Core Peak Flops
+
+We also support measure multi-core peak flops, parallelized
+with OpenMP. Simply add `omp_` prefix to the single core target.
+The binary takes one more argument to specify the number of
+threads you want to measure. For example:
+
+```bash
+make omp_peak_flops_avx512_float.exe
+./omp_peak_flops_avx512_float.exe [threads]
+```
+
 ### GEMM with MKL
 
 We use anaconda to manage the MKL installation. First create

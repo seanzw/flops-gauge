@@ -2,6 +2,11 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <time.h>
+#include <string.h>
+
+#ifdef USE_OPENMP
+#include <omp.h>
+#endif
 
 #define INCF(F) INCF_(F)
 #define INCF_(F) #F
@@ -29,21 +34,50 @@ int main(int argc, char **argv) {
   struct timespec start, end;
 
   kernel_init();
+  int64_t N = 800000000;
+  int64_t numThreads = 1;
 
+#ifdef USE_OPENMP
+
+  // Get number of threads.
+  if (argc > 1) {
+    numThreads = atoi(argv[1]);
+  }
+  omp_set_num_threads(numThreads);
+
+  // Init threads.
+  {
+    int x;
+    int *px = &x;
+#pragma omp parallel for schedule(static)
+    for (int i = 0; i < numThreads; ++i) {
+      volatile int x = *px;
+    }
+  }
+
+
+  // Multi thread.
+  clock_gettime(CLOCK_MONOTONIC, &start);
+#pragma omp parallel
+  { kernel(N); }
+  clock_gettime(CLOCK_MONOTONIC, &end);
+
+#else
+
+  // Single thread.
   clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start);
-
-  int N = 10000000;
   kernel(N);
-
   clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &end);
+
+#endif
 
   diff = BILLION * (end.tv_sec - start.tv_sec) + end.tv_nsec - start.tv_nsec;
 
-  int64_t flop = N * flop_per_iter;
+  int64_t flop = N * numThreads * flop_per_iter;
   double gflops = ((double)flop) / ((double)diff);
 
-  printf("[%s] CPU time = %llu ns %.4f GFlops/Core.\n", kernel_str,
-         (long long unsigned int)diff, gflops);
+  printf("[%s] CPU Threads %4d time = %10llu ns %.4f GFlops/Core.\n",
+         kernel_str, numThreads, (long long unsigned int)diff, gflops);
 
   return 0;
 }
