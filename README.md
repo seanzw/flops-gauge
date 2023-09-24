@@ -4,6 +4,15 @@ These are the utility tool I used to measure the peak flops.
 Currently it only supports x86. Pull requests for other ISAs
 are welcome.
 
+### Monitor CPU Frequency
+
+I found this command to monitor the CPU frequency very helpful
+for me to relate GFlops back to CPU cycles and latency.
+
+```bash
+watch -n 1 'cat /proc/cpuinfo | grep Hz'
+```
+
 ### Single Core Peak Flops
 
 I use inline assembly to measurethe peak single core flops.
