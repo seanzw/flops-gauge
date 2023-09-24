@@ -76,7 +76,7 @@ int main(int argc, char **argv) {
   int64_t flop = N * numThreads * flop_per_iter;
   double gflops = ((double)flop) / ((double)diff);
 
-  printf("[%s] CPU Threads %4d time = %10llu ns %.4f GFlops/Core.\n",
+  printf("[%s] CPU Threads %4ld time = %10llu ns %.4f GFlops/Core.\n",
          kernel_str, numThreads, (long long unsigned int)diff, gflops);
 
   return 0;
