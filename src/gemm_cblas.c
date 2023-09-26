@@ -60,13 +60,13 @@ double measure_gemm_multi(int M, int N, int K, wrap_gemm gemm, init_gemm init) {
   int less_count_threshold = 2;
 #else
   int less_count_threshold = 5;
-  if (M <= 1024) {
+  if (M <= 512) {
     less_count_threshold *= 2;
   }
-  if (N <= 1024) {
+  if (N <= 512) {
     less_count_threshold *= 2;
   }
-  if (K <= 1024) {
+  if (K <= 512) {
     less_count_threshold *= 2;
   }
 #endif
@@ -78,7 +78,7 @@ double measure_gemm_multi(int M, int N, int K, wrap_gemm gemm, init_gemm init) {
 
   while (1) {
     double gflops = measure_gemm(M, N, K, a, b, c, gemm);
-    if (gflops > best_gflops) {
+    if (gflops > best_gflops * 1.01) {
       best_gflops = gflops;
       less_count = 0;
     } else {
