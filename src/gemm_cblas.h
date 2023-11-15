@@ -15,7 +15,7 @@
 
 #define BILLION 1000000000L
 
-#define max_repeats 256
+#define max_repeats 2048
 double measured_gflops[max_repeats];
 
 typedef uint64_t (*wrap_gemm)(int, int, int, void *, void *, void *);
@@ -129,6 +129,21 @@ struct DataTypeConfig {
   int c_size;
 };
 
+#ifdef PROFILE
+
+struct DataTypeConfig data_type_configs[] = {
+    {
+        .type = "s8u8s32",
+        .gemm = gemm_s8u8s32_wrap,
+        .init = gemm_s8u8s32_init,
+        .a_size = sizeof(MKL_INT8),
+        .b_size = sizeof(MKL_INT8),
+        .c_size = sizeof(int32_t),
+    },
+};
+
+#else
+
 struct DataTypeConfig data_type_configs[] = {
     {
         .type = "float",
@@ -165,5 +180,6 @@ struct DataTypeConfig data_type_configs[] = {
     },
 #endif
 };
+#endif
 
 #endif

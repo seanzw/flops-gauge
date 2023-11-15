@@ -5,10 +5,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <omp.h>
 
 #define BILLION 1000000000L
 
-#define max_repeats 256
 double measured_gflops[max_repeats];
 
 int measure_gemm(int M, int N, int K, void *a, void *b, void *c,
@@ -16,6 +16,8 @@ int measure_gemm(int M, int N, int K, void *a, void *b, void *c,
 
 #ifdef SINGLE_THREAD
   int repeats = 5;
+#elif defined(PROFILE)
+  int repeats = 64;
 #else
   int repeats = 32;
   if (M <= 1024) {
@@ -99,6 +101,10 @@ double measure_gemm_multi(int M, int N, int K, wrap_gemm gemm, init_gemm init) {
 }
 
 const int dense_mm_MNK[][3] = {
+
+#ifdef PROFILE
+    {2048, 2048, 2048},
+#else
     // Some simple regular square marix size.
     {512, 512, 512},
     {1024 * 1, 1024 * 1, 1024 * 1},
@@ -107,10 +113,6 @@ const int dense_mm_MNK[][3] = {
     // {1024 * 8, 1024 * 8, 1024 * 8},
     // {1024 * 16, 1024 * 16, 1024 * 16},
     // {1024 * 32, 1024 * 32, 1024 * 32},
-
-#ifdef PROFILE
-    {2048, 2048, 2048},
-#else
     // Matrix size from DeepBench
     {5124, 700, 2048},
     {35, 700, 2048},
@@ -199,7 +201,7 @@ const int dense_mm_MNK[][3] = {
 #endif
 };
 
-int main() {
+int main(int argc, char *argv[]) {
 
   int benchmark_count = sizeof(dense_mm_MNK) / sizeof(dense_mm_MNK[0]);
 
@@ -221,6 +223,12 @@ int main() {
   }
 
   fprintf(csv, "\n");
+
+  if (argc >= 2) {
+    int threads = atoi(argv[1]);
+    omp_set_num_threads(threads);
+    printf("NumThreads %d.\n", threads);
+  }
 
   for (int i = 0; i < benchmark_count; ++i) {
     int M = dense_mm_MNK[i][0];

@@ -57,10 +57,13 @@ MKL_INC_PATH   := $(MKL_INSTALL_PATH)/include
 MKL_SHARE_PATH := $(MKL_INSTALL_PATH)/lib
 
 gemm_cblas_mkl.exe: src/gemm_cblas.c src/*.h
-	gcc $< -O3 -DUSE_MKL -I$(MKL_INC_PATH) -L$(MKL_LIB_PATH) -lmkl_rt -lpthread -lm -ldl -o $@
+	gcc $< -O3 -DUSE_MKL -I$(MKL_INC_PATH) -L$(MKL_LIB_PATH) -lmkl_rt -lpthread -fopenmp -lm -ldl -o $@
+
+gemm_cblas_mkl_profile.exe: src/gemm_cblas.c src/*.h
+	gcc $< -O3 -DUSE_MKL -DPROFILE -I$(MKL_INC_PATH) -L$(MKL_LIB_PATH) -lmkl_rt -lpthread -fopenmp -lm -ldl -o $@
 
 gemm_cblas_mkl_single.exe: gemm_cblas.c *.h
-	gcc $^ -O3 -DSINGLE_THREAD -DUSE_MKL -I$(MKL_INC_PATH) -L$(MKL_LIB_PATH) -lmkl_rt -lpthread -lm -ldl -o $@
+	gcc $^ -O3 -DSINGLE_THREAD -DUSE_MKL -I$(MKL_INC_PATH) -L$(MKL_LIB_PATH) -lmkl_rt -lpthread -fopenmp -lm -ldl -o $@
 
 gemm_cblas_measure: gemm_cblas_aocl.exe gemm_cblas_mkl.exe
 	LD_LIBRARY_PATH=$(AOCL_LIB_PATH) ./gemm_cblas_aocl.exe
