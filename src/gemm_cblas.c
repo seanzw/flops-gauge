@@ -1,11 +1,11 @@
 
 #include "gemm_cblas.h"
 
+#include <omp.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include <omp.h>
 
 #define BILLION 1000000000L
 

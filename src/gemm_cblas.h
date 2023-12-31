@@ -77,12 +77,29 @@ uint64_t dgemm_wrap(int M, int N, int K, void *a, void *b, void *c) {
               (double *)a, lda, (double *)b, ldb, beta, (double *)c, ldc);
 }
 
-#ifdef USE_MKL
+#ifdef USE_OPENBLAS
+void gemm_bf16bf16f32_init(int M, int N, int K, void **a, void **b, void **c) {
+  *a = aligned_alloc(4096, sizeof(uint16_t) * M * K);
+  *b = aligned_alloc(4096, sizeof(uint16_t) * K * N);
+  *c = aligned_alloc(4096, sizeof(float) * M * N);
+}
 
+uint64_t gemm_bf16bf16f32_wrap(int M, int N, int K, void *a, void *b, void *c) {
+  int lda = K;
+  int ldb = N;
+  int ldc = N;
+  float alpha = 1.0;
+  float beta = 0.0;
+  cblas_sbgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, M, N, K, alpha,
+               (bfloat16 *)a, lda, (bfloat16 *)b, ldb, beta, (float *)c, ldc);
+}
+#endif
+
+#ifdef USE_MKL
 // Not sure if these exists in AOCL so limit to MKL.
 void gemm_bf16bf16f32_init(int M, int N, int K, void **a, void **b, void **c) {
-  *a = aligned_alloc(4096, sizeof(MKL_BF16) * M * K);
-  *b = aligned_alloc(4096, sizeof(MKL_BF16) * K * N);
+  *a = aligned_alloc(4096, sizeof(uint16_t) * M * K);
+  *b = aligned_alloc(4096, sizeof(uint16_t) * K * N);
   *c = aligned_alloc(4096, sizeof(float) * M * N);
 }
 
@@ -129,9 +146,21 @@ struct DataTypeConfig {
   int c_size;
 };
 
+struct DataTypeConfig data_type_configs[] = {
 #ifdef PROFILE
 
-struct DataTypeConfig data_type_configs[] = {
+#ifdef USE_OPENBLAS
+    {
+        .type = "bf16bf16f32",
+        .gemm = gemm_bf16bf16f32_wrap,
+        .init = gemm_bf16bf16f32_init,
+        .a_size = sizeof(bfloat16),
+        .b_size = sizeof(bfloat16),
+        .c_size = sizeof(float),
+    },
+#endif
+
+#ifdef USE_MKL
     {
         .type = "s8u8s32",
         .gemm = gemm_s8u8s32_wrap,
@@ -140,27 +169,38 @@ struct DataTypeConfig data_type_configs[] = {
         .b_size = sizeof(MKL_INT8),
         .c_size = sizeof(int32_t),
     },
-};
+#endif
 
 #else
 
-struct DataTypeConfig data_type_configs[] = {
+// {
+//     .type = "float",
+//     .gemm = sgemm_wrap,
+//     .init = sgemm_init,
+//     .a_size = sizeof(float),
+//     .b_size = sizeof(float),
+//     .c_size = sizeof(float),
+// },
+// {
+//     .type = "double",
+//     .gemm = dgemm_wrap,
+//     .init = dgemm_init,
+//     .a_size = sizeof(double),
+//     .b_size = sizeof(double),
+//     .c_size = sizeof(double),
+// },
+
+#ifdef USE_OPENBLAS
     {
-        .type = "float",
-        .gemm = sgemm_wrap,
-        .init = sgemm_init,
-        .a_size = sizeof(float),
-        .b_size = sizeof(float),
+        .type = "bf16bf16f32",
+        .gemm = gemm_bf16bf16f32_wrap,
+        .init = gemm_bf16bf16f32_init,
+        .a_size = sizeof(bfloat16),
+        .b_size = sizeof(bfloat16),
         .c_size = sizeof(float),
     },
-    {
-        .type = "double",
-        .gemm = dgemm_wrap,
-        .init = dgemm_init,
-        .a_size = sizeof(double),
-        .b_size = sizeof(double),
-        .c_size = sizeof(double),
-    },
+#endif
+
 #ifdef USE_MKL
     {
         .type = "bf16bf16f32",
@@ -179,7 +219,8 @@ struct DataTypeConfig data_type_configs[] = {
         .c_size = sizeof(int32_t),
     },
 #endif
-};
 #endif
+
+};
 
 #endif

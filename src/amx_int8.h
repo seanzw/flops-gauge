@@ -3,13 +3,19 @@
 
 #include "amx_common.h"
 
-// Each amx int8 is 16*16*64*2=32k flop.
-const uint64_t flop_per_iter = 6 * 16 * 16 * 64 * 2;
+#define TILE_M 16
+#define TILE_K 64
+#define TILE_N 16
+#define SRC_ELEM_SIZE 1
+#define DST_ELEM_SIZE 4
+#define NUM_DST_TILE 6
 
 #define MAX 1024
 #define MAX_ROWS 16
 #define MAX_COLS 64
 #define STRIDE 64
+
+const uint64_t flop_per_iter = NUM_DST_TILE * TILE_M * TILE_N * TILE_K * 2;
 
 void setup_tile() {
 
@@ -25,7 +31,26 @@ void setup_tile() {
     exit(-1);
 
   // Load tile configuration
-  init_tile_config(&tile_data, MAX_ROWS, MAX_COLS);
+  tile_data.palette_id = 1;
+  tile_data.start_row = 0;
+
+  for (int i = 0; i < 8; ++i) {
+    if (i < NUM_DST_TILE) {
+      // Dest.
+      tile_data.colsb[i] = TILE_N * DST_ELEM_SIZE;
+      tile_data.rows[i] = TILE_M;
+    } else if (i == NUM_DST_TILE) {
+      // Src1.
+      tile_data.colsb[i] = TILE_K * SRC_ELEM_SIZE;
+      tile_data.rows[i] = TILE_M;
+    } else {
+      // Src2.
+      tile_data.colsb[i] = TILE_K * SRC_ELEM_SIZE;
+      tile_data.rows[i] = TILE_N;
+    }
+  }
+
+  _tile_loadconfig(&tile_data);
 
   // Init src matrix buffers with data
   init_buffer(src1, 2, MAX_ROWS, MAX_COLS);
@@ -38,18 +63,20 @@ void setup_tile() {
   init_buffer32(res, 0, MAX_ROWS, MAX_COLS);
 
   // Load tile rows from memory
-  _tile_loadd(6, src1, STRIDE);
-  _tile_loadd(7, src2, STRIDE);
+  _tile_loadd(6, src1, TILE_K * SRC_ELEM_SIZE);
+  _tile_loadd(7, src2, TILE_N * SRC_ELEM_SIZE);
 
-  _tile_loadd(0, res, STRIDE);
-  _tile_loadd(1, res, STRIDE);
-  _tile_loadd(2, res, STRIDE);
-  _tile_loadd(3, res, STRIDE);
-  _tile_loadd(4, res, STRIDE);
-  _tile_loadd(5, res, STRIDE);
+  _tile_loadd(0, res, TILE_N * DST_ELEM_SIZE);
+  _tile_loadd(1, res, TILE_N * DST_ELEM_SIZE);
+  _tile_loadd(2, res, TILE_N * DST_ELEM_SIZE);
+  _tile_loadd(3, res, TILE_N * DST_ELEM_SIZE);
+  _tile_loadd(4, res, TILE_N * DST_ELEM_SIZE);
+  _tile_loadd(5, res, TILE_N * DST_ELEM_SIZE);
 }
 
 __attribute__((noinline)) void impl(int64_t N, float a, float b, float c) {
+
+  printf("SHit\n");
 
 #pragma clang loop unroll(disable)
   for (int64_t i = 0; i < N; ++i) {

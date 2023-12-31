@@ -16,12 +16,14 @@
 #define XFEATURE_XTILEDATA 18
 
 // Define tile config data structure
-typedef struct __tile_config {
+typedef struct __attribute__((packed)) __tile_config {
   uint8_t palette_id;
   uint8_t start_row;
   uint8_t reserved_0[14];
-  uint16_t colsb[16];
-  uint8_t rows[16];
+  uint16_t colsb[8];
+  uint8_t reserved_1[16];
+  uint8_t rows[8];
+  uint8_t reserved_2[8];
 } __tilecfg;
 
 /* Initialize tile config */

@@ -1,4 +1,11 @@
 #######################################################################
+#                CPU Id Query
+#######################################################################
+cpuid_query.exe: src/cpuid_query.cpp
+	g++ $^ -O3 -march=native -o $@
+
+
+#######################################################################
 #                Single Core Peak Flops Gauge
 #######################################################################
 
@@ -57,10 +64,13 @@ MKL_INC_PATH   := $(MKL_INSTALL_PATH)/include
 MKL_SHARE_PATH := $(MKL_INSTALL_PATH)/lib
 
 gemm_cblas_mkl.exe: src/gemm_cblas.c src/*.h
-	gcc $< -O3 -DUSE_MKL -I$(MKL_INC_PATH) -L$(MKL_LIB_PATH) -lmkl_rt -lpthread -fopenmp -lm -ldl -o $@
+	gcc $< -O3 -DUSE_MKL -I$(MKL_INC_PATH) -L$(MKL_LIB_PATH) -Wl,-rpath,$(MKL_LIB_PATH) -lmkl_rt -lpthread -fopenmp -lm -ldl -o $@
 
 gemm_cblas_mkl_profile.exe: src/gemm_cblas.c src/*.h
-	gcc $< -O3 -DUSE_MKL -DPROFILE -I$(MKL_INC_PATH) -L$(MKL_LIB_PATH) -lmkl_rt -lpthread -fopenmp -lm -ldl -o $@
+	gcc $< -O3 -g -fno-omit-frame-pointer -DUSE_MKL -DPROFILE -I$(MKL_INC_PATH) -L$(MKL_LIB_PATH) -Wl,-rpath,$(MKL_LIB_PATH) -lmkl_rt -lpthread -fopenmp -lm -ldl -o $@
+
+gemm_cblas_mkl_profile_static.exe: src/gemm_cblas.c src/*.h
+	gcc $< -O3 -g -DUSE_MKL -DPROFILE -I$(MKL_INC_PATH) -L$(MKL_LIB_PATH) -Wl,-rpath,$(MKL_LIB_PATH) -l:libmkl_intel_lp64.a -l:libmkl_intel_thread.a -l:libmkl_core.a -liomp5 -o $@
 
 gemm_cblas_mkl_single.exe: gemm_cblas.c *.h
 	gcc $^ -O3 -DSINGLE_THREAD -DUSE_MKL -I$(MKL_INC_PATH) -L$(MKL_LIB_PATH) -lmkl_rt -lpthread -fopenmp -lm -ldl -o $@
@@ -70,6 +80,26 @@ gemm_cblas_measure: gemm_cblas_aocl.exe gemm_cblas_mkl.exe
 	mv dense_mm.csv ../dense_mm_aocl.csv
 	LD_LIBRARY_PATH=$(MKL_LIB_PATH) ./gemm_cblas_mkl.exe
 	mv dense_mm.csv ../dense_mm_mkl.csv
+
+#######################################################################
+#                 GEMM OpenBLAS Gauge
+#######################################################################
+
+ifndef OPENBLAS_INSTALL_PATH
+$(warning Using default OPENBLAS_INSTALL_PATH)
+OPENBLAS_INSTALL_PATH=/usr/local/lib
+endif
+
+OPENBLAS_LIB_PATH   := $(OPENBLAS_INSTALL_PATH)/lib
+OPENBLAS_INC_PATH   := $(OPENBLAS_INSTALL_PATH)/include
+OPENBLAS_SHARE_PATH := $(OPENBLAS_INSTALL_PATH)/lib
+
+gemm_cblas_openblas.exe: src/gemm_cblas.c src/*.h
+	gcc $< -O3 -DUSE_OPENBLAS -I$(OPENBLAS_INC_PATH) -L$(OPENBLAS_LIB_PATH) -Wl,-rpath,$(OPENBLAS_LIB_PATH) -lopenblas -lpthread -fopenmp -o $@
+
+gemm_cblas_openblas_profile.exe: src/gemm_cblas.c src/*.h
+	gcc $< -O3 -DUSE_OPENBLAS -DPROFILE -I$(OPENBLAS_INC_PATH) -L$(OPENBLAS_LIB_PATH) -Wl,-rpath,$(OPENBLAS_LIB_PATH) -lopenblas -lpthread -fopenmp -o $@
+
 
 clean:
 	rm *.exe
