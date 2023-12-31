@@ -47,7 +47,7 @@ a new environment and install mkl.
 ```bash
 conda create --name mkl python=3
 conda activate mkl
-conda install -c intel mkl mkl-include
+conda install -c intel mkl mkl-include mkl-static
 ```
 
 Now set the `MKL_INSTALL_PATH` to the conda environment folder.
