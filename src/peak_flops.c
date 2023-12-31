@@ -34,7 +34,7 @@ int main(int argc, char **argv) {
   struct timespec start, end;
 
   kernel_init();
-  int64_t N = 8000000000;
+  int64_t N = 800 * 1024 * 1024;
   int64_t numThreads = 1;
 
 #ifdef USE_OPENMP
